@@ -94,7 +94,47 @@ class LibraryManagementSystem:
         add_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
     def delete_book(self):
-        pass
+        # Fetch books from the database
+        conn = sqlite3.connect('library.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM books")
+        books = c.fetchall()
+        conn.close()
+
+        if not books:
+            messagebox.showinfo("Delete Book", "No books available to delete.")
+            return
+
+        # Create a new window for deleting a book
+        delete_window = tk.Toplevel(self.root)
+        delete_window.title("Delete Book")
+
+        # Display the list of books with corresponding IDs
+        tk.Label(delete_window, text="Select a book to delete:").grid(row=0, column=0, padx=10, pady=5)
+        book_listbox = tk.Listbox(delete_window, width=50, height=10)
+        book_listbox.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
+
+        for book in books:
+            book_listbox.insert(tk.END, f"{book[0]}. {book[1]} by {book[2]} ({book[3]})")
+
+        # Function to handle deleting the selected book
+        def delete_from_database():
+            selected_book_index = book_listbox.curselection()
+            if selected_book_index:
+                book_id = books[selected_book_index[0]][0]
+                conn = sqlite3.connect('library.db')
+                c = conn.cursor()
+                c.execute("DELETE FROM books WHERE id=?", (book_id,))
+                conn.commit()
+                conn.close()
+                messagebox.showinfo("Success", "Book deleted successfully.")
+                delete_window.destroy()  # Close the delete book window
+            else:
+                messagebox.showerror("Error", "Please select a book to delete.")
+
+        # Button to confirm deleting the selected book
+        delete_button = tk.Button(delete_window, text="Delete Book", command=delete_from_database)
+        delete_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
 
     def edit_book(self):
         pass

@@ -238,7 +238,66 @@ class LibraryManagementSystem:
             update_button.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
 
     def search_book(self):
-        pass
+        # Create a new window for searching a book
+        search_window = tk.Toplevel(self.root)
+        search_window.title("Search Book")
+
+        # Labels and entry fields for search parameters
+        tk.Label(search_window, text="Search by Title:").grid(row=0, column=0, padx=10, pady=5)
+        title_entry = tk.Entry(search_window)
+        title_entry.grid(row=0, column=1, padx=10, pady=5)
+
+        tk.Label(search_window, text="Search by Author:").grid(row=1, column=0, padx=10, pady=5)
+        author_entry = tk.Entry(search_window)
+        author_entry.grid(row=1, column=1, padx=10, pady=5)
+
+        tk.Label(search_window, text="Search by Year:").grid(row=2, column=0, padx=10, pady=5)
+        year_entry = tk.Entry(search_window)
+        year_entry.grid(row=2, column=1, padx=10, pady=5)
+
+        # Function to handle searching for books
+        def search_books():
+            title = title_entry.get()
+            author = author_entry.get()
+            year = year_entry.get()
+
+            # Construct the SQL query based on search parameters
+            query = "SELECT * FROM books WHERE "
+            conditions = []
+            if title:
+                conditions.append(f"title LIKE '%{title}%'")
+            if author:
+                conditions.append(f"author LIKE '%{author}%'")
+            if year:
+                try:
+                    year = int(year)
+                    conditions.append(f"year = {year}")
+                except ValueError:
+                    messagebox.showerror("Error", "Please enter a valid year.")
+                    return
+
+            if conditions:
+                query += " AND ".join(conditions)
+            else:
+                query += "1"  # Select all if no conditions specified
+
+            # Execute the query
+            conn = sqlite3.connect('library.db')
+            c = conn.cursor()
+            c.execute(query)
+            result = c.fetchall()
+            conn.close()
+
+            # Display the search result
+            if result:
+                book_list = "\n".join([f"Title: {book[1]}, Author: {book[2]}, Year: {book[3]}" for book in result])
+                messagebox.showinfo("Search Result", book_list)
+            else:
+                messagebox.showinfo("Search Result", "No matching books found.")
+
+        # Button to confirm searching for books
+        search_button = tk.Button(search_window, text="Search", command=search_books)
+        search_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
 
 if __name__ == "__main__":
